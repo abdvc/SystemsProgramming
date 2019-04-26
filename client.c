@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
         int r = recv(sock, buf, sizeof(buf), 0);
         if (r < 0) {
             perror("recv");
-            exit(0)''
+            exit(0);
         }
 
         //printf("%d\n", r);
