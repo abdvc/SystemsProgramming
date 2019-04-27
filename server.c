@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <signal.h>
 #include <time.h>
 #include "node.h"
 
@@ -24,10 +25,10 @@
  * program accepts a new connection.
  */
 
-void add(char *ptr);
-void sub(char *ptr);
-void mult(char *ptr);
-void divide(char *ptr);
+float add(char *ptr);
+float sub(char *ptr);
+float mult(char *ptr);
+float divide(char *ptr);
 void run(char *ptr);
 
 int main()
@@ -67,7 +68,7 @@ int main()
 	fflush(stdout);
 
 	/* Start accepting connections */
-	listen(sock, 5);
+	listen(sock, 15);
 	do
 	{
 		msgsock = accept(sock, 0, 0);
@@ -112,29 +113,73 @@ int main()
 
 					ptr = strtok(buf, " \n");
 
+					char res[50];
+					float f;
+
 					if (strcmp(ptr, "add") == 0)
 					{
-						add(ptr);
+						f = add(ptr);
+						sprintf(res, "Result of add : %.2f\n", f);
+						int s = send(msgsock, res, strlen(res), 0);
+						if (s < 0)
+						{
+							perror("send");
+							exit(0);
+						}
 					}
 					else if (strcmp(ptr, "run") == 0)
 					{
 						run(ptr);
+						int s = send(msgsock, "", 0, 0);
 					}
 					else if (strcmp(ptr, "sub") == 0)
 					{
-						sub(ptr);
+						f = sub(ptr);
+						sprintf(res, "Result of add : %.2f\n", f);
+						int s = send(msgsock, res, strlen(res), 0);
+						if (s < 0)
+						{
+							perror("send");
+							exit(0);
+						}
 					}
 					else if (strcmp(ptr, "mult") == 0)
 					{
-						mult(ptr);
+						f = mult(ptr);
+						sprintf(res, "Result of add : %.2f\n", f);
+						int s = send(msgsock, res, strlen(res), 0);
+						if (s < 0)
+						{
+							perror("send");
+							exit(0);
+						}
 					}
 					else if (strcmp(ptr, "div") == 0)
 					{
-						divide(ptr);
+						f = divide(ptr);
+						sprintf(res, "Result of add : %.2f\n", f);
+						int s = send(msgsock, res, strlen(res), 0);
+						if (s < 0)
+						{
+							perror("send");
+							exit(0);
+						}
 					}
 					else if (strcmp(ptr, "list") == 0)
 					{
 						printNodes();
+						int s = send(msgsock, "", 0, 0);
+					}
+					else if (strcmp(ptr, "kill") == 0)
+					{
+						ptr = strtok(NULL, " ");
+						int pid = atoi(ptr);
+						kill(pid, SIGTERM);
+						node* temp = findNode(pid);
+						time_t t3;
+						temp->endtime = time(&t3);
+						temp->timeelapsed = temp->endtime - temp->starttime;
+						int s = send(msgsock, "Process terminated", 18, 0);
 					}
 					else if (strcmp(ptr, "exit") == 0)
 					{
@@ -155,6 +200,7 @@ int main()
 						write(STDOUT_FILENO, buf2, strlen(buf2));
 						memset(buf2, 0, sizeof(buf2));
 					}
+					memset(res, 0, sizeof(res));
 				}
 			} while (rval != 0);
 		}
@@ -172,7 +218,7 @@ int main()
 	 */
 }
 
-void add(char *ptr)
+float add(char *ptr)
 {
 	float res = 0;
 	//result for the calculations
@@ -191,12 +237,10 @@ void add(char *ptr)
 			res += i;
 		}
 	}
-	char buf[50];
-	sprintf(buf, "Result is : %.2f\n", res);
-	write(STDOUT_FILENO, buf, strlen(buf));
+	return res;
 }
 
-void sub(char *ptr)
+float sub(char *ptr)
 {
 	bool flag = false;
 	//flag to check for the first numeric value
@@ -219,12 +263,10 @@ void sub(char *ptr)
 			}
 		}
 	}
-	char buf[50];
-	sprintf(buf, "Result is : %.2f\n", res);
-	write(STDOUT_FILENO, buf, strlen(buf));
+	return res;
 }
 
-void mult(char *ptr)
+float mult(char *ptr)
 {
 	float res = 1;
 	//result for the calculations
@@ -238,12 +280,10 @@ void mult(char *ptr)
 			res *= i;
 		}
 	}
-	char buf[50];
-	sprintf(buf, "Result is : %.2f\n", res);
-	write(STDOUT_FILENO, buf, strlen(buf));
+	return res;
 }
 
-void divide(char *ptr)
+float divide(char *ptr)
 {
 	bool flag = false;
 	//check for the first numeric value
@@ -267,9 +307,7 @@ void divide(char *ptr)
 			}
 		}
 	}
-	char buf[50];
-	sprintf(buf, "Result is : %.2f\n", res);
-	write(STDOUT_FILENO, buf, strlen(buf));
+	return res;
 }
 
 void run(char *ptr)
