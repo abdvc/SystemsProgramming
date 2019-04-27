@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
 /*
  * This program creates a socket and initiates a connection with the socket
@@ -63,8 +64,11 @@ int main(int argc, char *argv[])
             exit(0);
         }
 
-//        if (write(sock, DATA, sizeof(DATA)) < 0)
-//            perror("writing on stream socket");
+		if (strcmp(buff, "exit\n") == 0) {
+			write(STDOUT_FILENO, "Disconnected from server\n", strlen("Disconnected from server\n"));
+			exit(0);
+		}
+
         int s = send(sock, buff, sizeof(buff), 0);
         if (s < 0) {
             perror("send");
@@ -75,8 +79,6 @@ int main(int argc, char *argv[])
             perror("recv");
             exit(0);
         }
-
-        //printf("%d\n", r);
         write(STDOUT_FILENO,buf, strlen(buf));
 	}
 	close(sock);
